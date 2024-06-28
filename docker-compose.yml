@@ -1,0 +1,132 @@
+version: '3'
+
+services:
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    restart: always
+    ports:
+      - "9696:9696"
+    volumes:
+      - ./prowlarr/config:/config
+      - ./prowlarr/data:/data
+
+  radarr:
+    image: linuxserver/radarr:latest
+    restart: always
+    ports:
+      - "7878:7878"
+    volumes:
+      - ./radarr/config:/config
+      - ./radarr/data:/data
+      - ./downloads:/downloads
+      - ./movies:/movies
+    depends_on:
+      - prowlarr
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    restart: always
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./sonarr/config:/config
+      - ./sonarr/data:/data
+      - ./downloads:/downloads
+      - ./tv:/tv
+    depends_on:
+      - prowlarr
+
+  lidarr:
+    image: linuxserver/lidarr:latest
+    restart: always
+    ports:
+      - "8686:8686"
+    volumes:
+      - ./lidarr/config:/config
+      - ./lidarr/data:/data
+      - ./downloads:/downloads
+      - ./music:/music
+    depends_on:
+      - prowlarr
+
+  transmission:
+    image: linuxserver/transmission:latest
+    restart: always
+    ports:
+      - "9091:9091"
+      - "51413:51413"
+    volumes:
+      - ./transmission/config:/config
+      - ./transmission/data:/data
+      - ./downloads/movies:/downloads/movies
+      - ./downloads/tv:/downloads/tv
+      - ./downloads/music:/downloads/music
+    depends_on:
+      - radarr
+      - sonarr
+      - lidarr
+
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    restart: always
+    ports:
+      - "8096:8096"
+      - "8920:8920"
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - ./downloads:/downloads
+      - ./movies:/movies
+      - ./tv:/tv
+      - ./music:/music
+    depends_on:
+      - transmission
+
+  ombi:
+    image: linuxserver/ombi:latest
+    restart: always
+    ports:
+      - "3579:3579"
+    volumes:
+      - ./ombi/config:/config
+    depends_on:
+      - jellyfin
+
+volumes:
+  prowlarr-config:
+  prowlarr-data:
+  radarr-config:
+  radarr-data:
+  sonarr-config:
+  sonarr-data:
+  lidarr-config:
+  lidarr-data:
+  transmission-config:
+  transmission-data:
+  jellyfin-config:
+  jellyfin-cache:
+  ombi-config:
+  downloads:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/downloads
+      o: bind
+  movies:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/movies
+      o: bind
+  tv:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/tv
+      o: bind
+  music:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/music
+      o: bind
