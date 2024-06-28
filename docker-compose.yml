@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   prowlarr:
     image: linuxserver/prowlarr:latest
@@ -9,6 +7,9 @@ services:
     volumes:
       - ./prowlarr/config:/config
       - ./prowlarr/data:/data
+    environment:
+      - PUID=1000
+      - PGID=1000
 
   radarr:
     image: linuxserver/radarr:latest
@@ -22,6 +23,9 @@ services:
       - ./movies:/movies
     depends_on:
       - prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -35,6 +39,9 @@ services:
       - ./tv:/tv
     depends_on:
       - prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
 
   lidarr:
     image: linuxserver/lidarr:latest
@@ -48,6 +55,9 @@ services:
       - ./music:/music
     depends_on:
       - prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
 
   transmission:
     image: linuxserver/transmission:latest
@@ -58,16 +68,17 @@ services:
     volumes:
       - ./transmission/config:/config
       - ./transmission/data:/data
-      - ./downloads/movies:/downloads/movies
-      - ./downloads/tv:/downloads/tv
-      - ./downloads/music:/downloads/music
+      - ./downloads:/downloads
     depends_on:
       - radarr
       - sonarr
       - lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
 
   jellyfin:
-    image: linuxserver/jellyfin:latest
+    image: jellyfin/jellyfin:latest
     restart: always
     ports:
       - "8096:8096"
@@ -81,6 +92,9 @@ services:
       - ./music:/music
     depends_on:
       - transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
 
   ombi:
     image: linuxserver/ombi:latest
@@ -90,7 +104,12 @@ services:
     volumes:
       - ./ombi/config:/config
     depends_on:
-      - jellyfin
+      - radarr
+      - sonarr
+      - lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
 
 volumes:
   prowlarr-config:
